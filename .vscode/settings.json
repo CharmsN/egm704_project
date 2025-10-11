@@ -1,5 +1,13 @@
+{ 
+  "python.defaultInterpreterPath": "C:\\Users\\cnewm\\anaconda3\\envs\\egm704_env\\python.exe" 
+} 
 {
-    "python-envs.defaultEnvManager": "ms-python.python:conda",
-    "python-envs.defaultPackageManager": "ms-python.python:conda",
-    "python-envs.pythonProjects": []
+  "git.enableSmartCommit": true,
+  "git.suggestSmartCommit": false
+}
+{
+  "git.enableSmartCommit": true,
+  "git.suggestSmartCommit": false,
+  "git.postCommitCommand": "push",        // push automatically after commit
+  "git.confirmSync": false                // no confirm dialog on sync
 }

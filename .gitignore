@@ -1,0 +1,28 @@
+# --- ENVIRONMENTS & SYSTEM FILES ---
+.vscode/
+__pycache__/
+*.pyc
+*.pyo
+.env
+*.env
+
+# --- DATA FILES ---
+data/sentinel2/raw/
+data/sentinel2/**/*.zip
+data/sentinel2/**/*.SAFE/
+data/sentinel2/**/*.tif
+data/**/*.csv
+data/**/*.xlsx
+data/**/*.gpkg
+data/**/*.geojson
+data/**/*.shp
+!data/aoi/*.geojson   # keep AOI geojsons tracked
+
+# --- LOGS & OUTPUT ---
+*.log
+*.tmp
+*.bak
+
+# --- WINDOWS JUNK ---
+Thumbs.db
+Desktop.ini

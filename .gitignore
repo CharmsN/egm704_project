@@ -26,3 +26,15 @@ data/**/*.shp
 # --- WINDOWS JUNK ---
 Thumbs.db
 Desktop.ini
+
+# --- QGIS ---
+*.qgz~
+*.qgs~
+*.aux.xml
+*.qml
+*.qmd
+.qgis2/
+.qgis3/
+
+# --- Notebook checkpoints ---
+.ipynb_checkpoints/

@@ -4,7 +4,7 @@
 ![Python Version](https://img.shields.io/badge/Python-3.10-blue.svg)
 ![QGIS Version](https://img.shields.io/badge/QGIS-3.34-green.svg)
 ![Conda Environment](https://img.shields.io/badge/Conda-env-blue.svg)
-
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17408445.svg)](https://doi.org/10.5281/zenodo.17408445)
 
 **Title:** Comparative Remote Sensing Methods for Habitat Classification and Natural Capital Monitoring  
 

@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+title: "EGM704 Remote Sensing Project: Comparative Remote Sensing Methods for Habitat Classification and Natural Capital Monitoring"
+authors:
+  - family-names: "Newmarch"
+    given-names: "Charmaine"
+    affiliation: "Ulster University – MSc Remote Sensing and GIS"
+date-released: "2025-10-21"
+version: "1.0.0"
+license: "CC-BY-4.0"
+repository-code: "https://github.com/CharmsN/egm704_project"
+abstract: >
+  This repository supports MSc research at Ulster University exploring the integration of Sentinel-1/2 and UAV data for UKHab-aligned habitat classification and natural-capital monitoring. It includes workflows for data fusion, accuracy assessment, and change detection in support of rewilding and ecosystem accounting.
+keywords:
+  - Remote Sensing
+  - GIS
+  - UKHab
+  - Natural Capital
+  - Sentinel
+  - Habitat Classification

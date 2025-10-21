@@ -1,0 +1,59 @@
+MSc Remote Sensing & GIS – Project Work Log
+Generated: 2025-10-11 19:21
+
+Project Theme:
+Comparative Remote Sensing Methods for Habitat Classification and Biodiversity Net Gain (BNG) Applications in the UK Utility Sector
+
+Week 1 – Proposal Development (from 22 Sept)
+• Finalised research question, hypothesis, aims, and objectives.
+• Drafted “Gap in Knowledge” and initial literature review outline.
+• Created Gantt chart for study timeline.
+• Identified three review themes: Remote sensing for habitat classification, Drone imagery validation, and BNG/UKHab integration.
+• Started building Zotero reference library and reading anchor papers.
+
+Week 2 – Dataset Familiarisation
+• Reviewed Sentinel-2 properties (10 m vs 20 m) and hyperspectral vs multispectral differences.
+• Investigated Pixxel, PRISMA, and EnMAP for context.
+• Identified Desborough AOI for baseline testing.
+• Confirmed Sentinel-2 and drone orthomosaic combination for classification validation.
+
+Week 3 – Methodology Design
+• Defined workflow comparing NDVI thresholding and Random Forest classification.
+• Established ground-truth validation plan using drone orthomosaics.
+• Outlined accuracy metrics (confusion matrix, kappa, F1-score).
+• Drafted detailed methodology section for proposal (due 22 Oct).
+
+Week 4 – Data Infrastructure & Tools Setup
+• Created Python environment egm704_project.
+• Installed geospatial libraries: geopandas, shapely, fiona, pyproj, rasterio, sentinelsat.
+• Linked Jupyter and VS Code environments.
+• Developed Sentinel-2 search script using sentinelsat and SciHub access.
+• Configured .netrc authentication for secure credentials storage.
+
+Week 5 – AOI & Data Query Automation
+• Created and validated Desborough AOI (desborough_aoi.gpkg).
+• Built Python scripts for Sentinel-1 and Sentinel-2 queries.
+• Folder hierarchy established:
+    egm704_project/
+        data_files/
+        scripts/sentinel/
+        s1_downloads/
+• Tested Sentinel-2 download function (download_best_overlap_image).
+
+Week 6 – Sentinel-1 Integration & Workflow Refinement (Today)
+• Worked from before 5 a.m. to after 7 p.m. (≈14 hours total, 7–8 focused).
+• Began configuring Sentinel-1 retrieval using Copernicus Data Space token (fetch_s1_cdse.py).
+• Encountered 403/path errors → switched to SentinelAPI/SciHub method.
+• Created secure _netrc file for authentication, excluded from version control.
+• Saved/configured new scripts:
+    - download_s1_best_overlap.py (for water-company polygons)
+    - download_s1_from_aoi.py (for Desborough AOI)
+• Installed GeoPandas, Shapely, Fiona, PyProj, Rtree in egm704_project.
+• Next: Run download_s1_from_aoi.py to query/download Sentinel-1 data via SciHub using AOI geometry.
+
+Next Steps
+• Verify GeoPandas installation.
+• Run download_s1_from_aoi.py for Desborough AOI.
+• Inspect downloaded SAFE metadata and footprint.
+• Integrate Sentinel-1 preprocessing (speckle filter, calibration).
+• Compare Sentinel-1 vs Sentinel-2 classification outputs.

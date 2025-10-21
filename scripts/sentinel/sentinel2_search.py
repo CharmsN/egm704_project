@@ -1,97 +1,98 @@
-from sentinelsat import SentinelAPI, geojson_to_wkt, read_geojson
+import json, os, sys, requests, pandas as pd
+from shapely.geometry import shape, mapping
+from shapely.ops import unary_union
 from datetime import datetime
-import pandas as pd
-import os
-import sys
 
-# --- USER SETTINGS ---
-# You can keep these hard-coded or (safer) set env vars COPERNICUS_USERNAME / COPERNICUS_PASSWORD.
-USERNAME = os.getenv("COPERNICUS_USERNAME"
-PASSWORD = os.getenv("COPERNICUS_PASSWORD")  # set in env for safety, or fill in temporarily
-HUB_URL  = "https://apihub.copernicus.eu/apihub"  # Open Access Hub
-
-# Use your actual AOI path (as you provided)
+# --- INPUTS ---
 AOI_GEOJSON = r"C:\EGM704\data_sets\egm704_project\qgis\AOI\desborough_aoi.geojson"
-
-# Date window (inclusive)
-DATE_FROM = "2025-05-01"
-DATE_TO   = "2025-10-11"  # today
-
-CLOUD_MAX = 20  # percent
+DATE_FROM   = "2025-05-01T00:00:00Z"
+DATE_TO     = "2025-10-11T23:59:59Z"
+CLOUD_MAX   = 20
 
 # --- OUTPUTS ---
-METADATA_DIR = r"C:\EGM704\data_sets\egm704_project\data\sentinel2\metadata"
-os.makedirs(METADATA_DIR, exist_ok=True)
-CSV_OUT = os.path.join(METADATA_DIR, f"s2_search_{datetime.now().strftime('%Y%m%d_%H%M')}.csv")
+META_DIR = r"C:\EGM704\data_sets\egm704_project\data\sentinel2\metadata"
+os.makedirs(META_DIR, exist_ok=True)
+CSV_OUT = os.path.join(META_DIR, f"s2_cdse_search_{datetime.now().strftime('%Y%m%d_%H%M')}.csv")
 
-def fail(msg: str):
+# --- CDSE OData endpoint (search) ---
+ODATA = "https://catalogue.dataspace.copernicus.eu/odata/v1/Products"
+
+def fail(msg):
     print(f"[ERROR] {msg}", file=sys.stderr)
     sys.exit(1)
 
-# --- SANITY CHECKS ---
-if not USERNAME or not (PASSWORD or os.getenv("COPERNICUS_PASSWORD")):
-    print("[WARN] No Copernicus password detected. Set COPERNICUS_PASSWORD env var or fill PASSWORD in the script.")
-
+# Load AOI geometry
 if not os.path.exists(AOI_GEOJSON):
     fail(f"AOI file not found: {AOI_GEOJSON}")
 
-# Load GeoJSON and convert to WKT (this fixes the TypeError you saw)
+with open(AOI_GEOJSON, "r", encoding="utf-8") as f:
+    gj = json.load(f)
+
+geoms = []
+for feat in gj.get("features", []):
+    geoms.append(shape(feat["geometry"]))
+if not geoms:
+    fail("No features found in AOI GeoJSON.")
+
+aoi = unary_union(geoms).buffer(0)
+# Build POLYGON WKT (closed ring) from the AOI bbox (safe & simple)
+minx, miny, maxx, maxy = aoi.bounds
+poly_wkt = f"POLYGON(({minx} {miny},{maxx} {miny},{maxx} {maxy},{minx} {maxy},{minx} {miny}))"
+geog = f"geography'SRID=4326;{poly_wkt}'"
+footprint_filter = f"OData.CSC.Intersects(area={geog})"  # <-- removed geometry=Footprint
+
+# Ensure CDSE-friendly timestamp literals (with milliseconds)
+DATE_FROM = "2025-05-01T00:00:00.000Z"
+DATE_TO   = "2025-10-11T23:59:59.999Z"
+
+# Build the $filter
+flt = (
+    "Collection/Name eq 'SENTINEL-2' "
+    "and Attributes/processingLevel eq 'L2A' "
+    f"and ContentDate/Start ge {DATE_FROM} and ContentDate/Start le {DATE_TO} "
+    f"and Attributes/cloudCoverPercentage le {CLOUD_MAX} "
+    f"and {footprint_filter}"
+)
+
+params = {
+    "$filter": flt,
+    "$select": "Id,Name,ContentDate,Attributes,GeoFootprint",
+    "$orderby": "ContentDate/Start desc",
+    "$top": 100
+}
+
+print("[INFO] Querying CDSE OData…")
+print("[DEBUG] Params:", params)  # helpful if it 400s again
+r = requests.get(ODATA, params=params, timeout=90)
 try:
-    aoi_fc = read_geojson(AOI_GEOJSON)         # dict FeatureCollection
-    footprint = geojson_to_wkt(aoi_fc)         # WKT polygon
+    r.raise_for_status()
 except Exception as e:
-    fail(f"Failed to read/convert AOI GeoJSON: {e}")
+    print("[DEBUG] Final URL:", r.url)
+    print("[DEBUG] Body:", r.text[:800])
+    fail(f"OData request failed: {e}")
 
-# Convert dates to YYYYMMDD (sentinelsat accepts strings or datetimes; this is explicit)
-def yyyymmdd(s: str) -> str:
-    return s.replace("-", "")
+items = r.json().get("value", [])
+print(f"[INFO] Found {len(items)} item(s).")
 
-DATE_FROM_FMT = yyyymmdd(DATE_FROM)
-DATE_TO_FMT   = yyyymmdd(DATE_TO)
-
-# --- RUN QUERY ---
-try:
-    api = SentinelAPI(USERNAME, PASSWORD, HUB_URL)
-except Exception as e:
-    fail(f"Login/API init failed: {e}")
-
-print(f"Querying S2 L2A for AOI={os.path.basename(AOI_GEOJSON)}, "
-      f"{DATE_FROM}..{DATE_TO}, cloud ≤ {CLOUD_MAX}%")
-
-try:
-    products = api.query(
-        area=footprint,
-        date=(DATE_FROM_FMT, DATE_TO_FMT),
-        platformname="Sentinel-2",
-        processinglevel="Level-2A",
-        cloudcoverpercentage=(0, CLOUD_MAX)
-    )
-except Exception as e:
-    fail(f"Query failed: {e}")
-
-count = len(products) if products else 0
-print(f"Found {count} Sentinel-2 L2A item(s).")
-
-if count == 0:
+if not items:
     sys.exit(0)
 
-# Convert to DataFrame, keep handy columns, and save CSV
-df = api.to_dataframe(products)
+# Flatten to DataFrame
+rows = []
+for it in items:
+    attrs = it.get("Attributes", {}) or {}
+    rows.append({
+        "id": it.get("Id"),
+        "name": it.get("Name"),
+        "begin": it.get("ContentDate", {}).get("Start"),
+        "end": it.get("ContentDate", {}).get("End"),
+        "cloudcover": attrs.get("cloudCoverPercentage"),
+        "mgrs": attrs.get("tileId") or attrs.get("name"),  # may vary
+    })
 
-keep = [
-    "title", "size", "beginposition", "endposition",
-    "cloudcoverpercentage", "uuid", "link", "link_alternative"
-]
-for col in keep:
-    if col not in df.columns:
-        df[col] = None
-
-df = df[keep].sort_values("beginposition")
+df = pd.DataFrame(rows).sort_values("begin")
 df.to_csv(CSV_OUT, index=False)
-print(f"Saved CSV → {CSV_OUT}")
+print(f"[OK] Saved CSV → {CSV_OUT}")
 
-# --- OPTIONAL: Download all (uncomment when ready) ---
-# RAW_DIR = r"C:\EGM704\data_sets\egm704_project\data\sentinel2\raw"
-# os.makedirs(RAW_DIR, exist_ok=True)
-# api.download_all(products, directory_path=RAW_DIR)
-# print(f"Downloaded products to: {RAW_DIR}")
+# Tip: to download later you will need a CDSE access token and use:
+# https://download.dataspace.copernicus.eu/odata/v1/Products(<Id>)/$value

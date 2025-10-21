@@ -38,3 +38,26 @@ Desktop.ini
 
 # --- Notebook checkpoints ---
 .ipynb_checkpoints/
+
+# Ignore any netrc credential files
+.netrc
+_netrc
+*.netrc
+*_netrc
+# DATA AND TEMP FILES 
+data/* 
+!data/.gitkeep 
+!data/raw/.gitkeep 
+!data/interim/.gitkeep 
+!data/processed/.gitkeep 
+*.zip 
+*.tif 
+*.tiff 
+*.SAFE/ 
+*.csv 
+*.xlsx 
+.ipynb_checkpoints/ 
+.env 
+.venv/ 
+*/__pycache__/ 
+*.log 

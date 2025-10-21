@@ -1,5 +1,11 @@
 # EGM704 Remote Sensing Project
 
+[![License: CC BY 4.0](https://img.shields.io/badge/License-CC_BY_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
+![Python Version](https://img.shields.io/badge/Python-3.10-blue.svg)
+![QGIS Version](https://img.shields.io/badge/QGIS-3.34-green.svg)
+![Conda Environment](https://img.shields.io/badge/Conda-env-blue.svg)
+
+
 **Title:** Comparative Remote Sensing Methods for Habitat Classification and Natural Capital Monitoring  
 
 **Author:** Charmaine Newmarch  
